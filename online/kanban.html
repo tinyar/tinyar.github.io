@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线看板(Kanban Board)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        h1 {
+            color: #2c3e50;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button, .file-input-label {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-input-label {
+            background-color: #9b59b6;
+            color: white;
+            display: inline-block;
+        }
+
+        .file-input-label:hover {
+            background-color: #8e44ad;
+        }
+
+        .projects-container {
+            margin-bottom: 30px;
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px 8px 0 0;
+            margin-top: 20px;
+        }
+
+        .project-title-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .project-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+        }
+
+        .project-title:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .project-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .add-column-btn {
+            background-color: #e67e22;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .add-column-btn:hover {
+            background-color: #d35400;
+        }
+
+        .columns-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px 0;
+            background-color: #ecf0f1;
+            border-radius: 0 0 8px 8px;
+            min-height: 400px;
+        }
+
+        .column {
+            background-color: #dfe6e9;
+            border-radius: 8px;
+            width: 300px;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .column:first-child {
+            margin-left: 20px;
+        }
+
+        .column-header {
+            background-color: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            flex-grow: 1;
+        }
+
+        .column-title:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .column-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .column-btn {
+            background: none;
+            border: none;
+            color: white;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.1em;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .column-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .add-item-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        .add-item-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        .items-container {
+            flex-grow: 1;
+            padding: 15px;
+            min-height: 200px;
+            overflow-y: auto;
+        }
+
+        .item {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: move;
+            user-select: none;
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .item:hover {
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+
+        .item-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .item-description {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .item.dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+        }
+
+        .item.drag-over {
+            border-top: 2px solid #3498db;
+            margin-top: 2px;
+        }
+
+        .column.drop-zone {
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 2px dashed #3498db;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+
+        .modal h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-cancel {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background-color: #7f8c8d;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .columns-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .column {
+                width: 100%;
+            }
+            .column:first-child {
+                margin-left: 0;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .project-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            .project-title-area {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .project-controls {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 在线看板(Kanban Board)</h1>
+            <div class="controls">
+                <button id="addProjectBtn" class="btn-primary">➕ 添加新项目</button>
+                <button id="exportBtn" class="btn-success">📥 导出数据</button>
+                <label for="importFile" class="file-input-label">📤 导入数据
+                    <input type="file" id="importFile" class="file-input" accept=".json">
+                </label>
+                <button id="clearDataBtn" class="btn-secondary">🗑️ 清除所有数据</button>
+            </div>
+        </header>
+
+        <main id="projectsContainer" class="projects-container">
+            <!-- 项目、列和事项会由JS动态生成到这里 -->
+        </main>
+    </div>
+
+    <!-- 模态框：添加/编辑项目 -->
+    <div id="projectModal" class="modal">
+        <div class="modal-content">
+            <h3 id="projectModalTitle">添加新项目</h3>
+            <form id="projectForm">
+                <div class="form-group">
+                    <label for="projectOrder">项目序号（数字越大越靠前）</label>
+                    <input type="number" id="projectOrder" required min="1" placeholder="例如：1">
+                </div>
+                <div class="form-group">
+                    <label for="projectName">项目名称</label>
+                    <input type="text" id="projectName" required placeholder="例如：网站改版项目">
+                </div>
+                <input type="hidden" id="currentProjectId">
+                <div class="modal-actions">
+                    <div>
+                        <button type="button" id="deleteProjectBtn" class="btn-danger" style="display: none;">删除项目</button>
+                    </div>
+                    <div>
+                        <button type="button" id="cancelProjectBtn" class="btn-cancel">取消</button>
+                        <button type="submit" class="btn-primary">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 模态框：添加/编辑看板列 -->
+    <div id="columnModal" class="modal">
+        <div class="modal-content">
+            <h3 id="columnModalTitle">添加新列</h3>
+            <form id="columnForm">
+                <div class="form-group">
+                    <label for="columnOrder">列序号（数字越小越靠前）</label>
+                    <input type="number" id="columnOrder" required min="1" placeholder="例如：1">
+                </div>
+                <div class="form-group">
+                    <label for="columnName">列名称</label>
+                    <input type="text" id="columnName" required placeholder="例如：待处理、进行中、已完成">
+                </div>
+                <input type="hidden" id="currentProjectId">
+                <input type="hidden" id="currentColumnId">
+                <div class="modal-actions">
+                    <div>
+                        <button type="button" id="deleteColumnBtn" class="btn-danger" style="display: none;">删除列</button>
+                    </div>
+                    <div>
+                        <button type="button" id="cancelColumnBtn" class="btn-cancel">取消</button>
+                        <button type="submit" class="btn-primary">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 模态框：添加/编辑事项 -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <h3 id="itemModalTitle">添加新事项</h3>
+            <form id="itemForm">
+                <div class="form-group">
+                    <label for="itemTitle">事项标题</label>
+                    <input type="text" id="itemTitle" required placeholder="需要完成的具体任务">
+                </div>
+                <div class="form-group">
+                    <label for="itemDescription">描述 (可选)</label>
+                    <textarea id="itemDescription" placeholder="详细说明..."></textarea>
+                </div>
+                <input type="hidden" id="currentItemProjectId">
+                <input type="hidden" id="currentItemColumnId">
+                <input type="hidden" id="currentItemId">
+                <div class="modal-actions">
+                    <div>
+                        <button type="button" id="deleteItemBtn" class="btn-danger" style="display: none;">删除事项</button>
+                    </div>
+                    <div>
+                        <button type="button" id="cancelItemBtn" class="btn-cancel">取消</button>
+                        <button type="submit" class="btn-primary">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 数据结构
+        // projects: [
+        //   {
+        //     id: 'project-1',
+        //     name: '项目A',
+        //     order: 1,
+        //     columns: [
+        //       {
+        //         id: 'column-1',
+        //         name: '待处理',
+        //         order: 1,
+        //         items: [
+        //           { id: 'item-1', title: '任务1', description: '描述1' },
+        //           ...
+        //         ]
+        //       },
+        //       ...
+        //     ]
+        //   },
+        //   ...
+        // ]
+
+        let kanbanData = {
+            projects: []
+        };
+        let currentDraggedItem = null;
+        let currentDragSourceColumn = null;
+        let dragOverItem = null;
+
+        // DOM 元素
+        const projectsContainerEl = document.getElementById('projectsContainer');
+        const addProjectBtnEl = document.getElementById('addProjectBtn');
+        const exportBtnEl = document.getElementById('exportBtn');
+        const importFileEl = document.getElementById('importFile');
+        const clearDataBtnEl = document.getElementById('clearDataBtn');
+
+        const projectModalEl = document.getElementById('projectModal');
+        const projectFormEl = document.getElementById('projectForm');
+        const projectOrderInputEl = document.getElementById('projectOrder');
+        const projectNameInputEl = document.getElementById('projectName');
+        const currentProjectIdInputEl = document.getElementById('currentProjectId');
+        const cancelProjectBtnEl = document.getElementById('cancelProjectBtn');
+        const deleteProjectBtnEl = document.getElementById('deleteProjectBtn');
+        let isEditingProject = false;
+
+        const columnModalEl = document.getElementById('columnModal');
+        const columnFormEl = document.getElementById('columnForm');
+        const columnOrderInputEl = document.getElementById('columnOrder');
+        const columnNameInputEl = document.getElementById('columnName');
+        const currentColumnProjectIdInputEl = document.getElementById('currentProjectId');
+        const currentColumnIdInputEl = document.getElementById('currentColumnId');
+        const cancelColumnBtnEl = document.getElementById('cancelColumnBtn');
+        const deleteColumnBtnEl = document.getElementById('deleteColumnBtn');
+        let isEditingColumn = false;
+
+        const itemModalEl = document.getElementById('itemModal');
+        const itemFormEl = document.getElementById('itemForm');
+        const itemTitleInputEl = document.getElementById('itemTitle');
+        const itemDescriptionInputEl = document.getElementById('itemDescription');
+        const currentItemProjectIdInputEl = document.getElementById('currentItemProjectId');
+        const currentItemColumnIdInputEl = document.getElementById('currentItemColumnId');
+        const currentItemIdInputEl = document.getElementById('currentItemId');
+        const cancelItemBtnEl = document.getElementById('cancelItemBtn');
+        const deleteItemBtnEl = document.getElementById('deleteItemBtn');
+        let isEditingItem = false;
+
+        // 工具函数
+        function generateId(prefix) {
+            return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('kanbanData', JSON.stringify(kanbanData));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('kanbanData');
+            if (saved) {
+                try {
+                    kanbanData = JSON.parse(saved);
+                    
+                    // 确保每个项目都有order字段
+                    let maxProjectOrder = 0;
+                    kanbanData.projects.forEach(project => {
+                        if (!project.hasOwnProperty('order')) {
+                            project.order = 1;
+                        }
+                        if (project.order > maxProjectOrder) {
+                            maxProjectOrder = project.order;
+                        }
+                        
+                        // 确保每个列都有order字段
+                        let maxColumnOrder = 0;
+                        project.columns.forEach(column => {
+                            if (!column.hasOwnProperty('order')) {
+                                column.order = 1;
+                            }
+                            if (column.order > maxColumnOrder) {
+                                maxColumnOrder = column.order;
+                            }
+                        });
+                    });
+                } catch (e) {
+                    console.error('加载本地存储数据失败:', e);
+                    kanbanData = { projects: [] };
+                }
+            }
+        }
+
+        // 获取下一个可用的项目序号
+        function getNextProjectOrder() {
+            if (kanbanData.projects.length === 0) {
+                return 1;
+            }
+            let maxOrder = 0;
+            kanbanData.projects.forEach(project => {
+                if (project.order > maxOrder) {
+                    maxOrder = project.order;
+                }
+            });
+            return maxOrder + 1;
+        }
+
+        // 获取下一个可用的列序号
+        function getNextColumnOrder(projectId) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (!project || project.columns.length === 0) {
+                return 1;
+            }
+            let maxOrder = 0;
+            project.columns.forEach(column => {
+                if (column.order > maxOrder) {
+                    maxOrder = column.order;
+                }
+            });
+            return maxOrder + 1;
+        }
+
+        // 渲染整个看板
+        function renderKanban() {
+            projectsContainerEl.innerHTML = '';
+            if (kanbanData.projects.length === 0) {
+                projectsContainerEl.innerHTML = `
+                    <div class="empty-message">
+                        <p>还没有任何项目。点击上方的"添加新项目"按钮开始创建您的第一个看板！</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 按order降序排列项目
+            kanbanData.projects.sort((a, b) => b.order - a.order);
+            
+            kanbanData.projects.forEach(project => {
+                const projectEl = document.createElement('div');
+                projectEl.className = 'project';
+                projectEl.innerHTML = `
+                    <div class="project-header">
+                        <div class="project-title-area">
+                            <div class="project-title" data-project-id="${project.id}">${project.name}</div>
+                        </div>
+                        <div class="project-controls">
+                            <button class="add-column-btn" data-project-id="${project.id}">+ 添加列</button>
+                        </div>
+                    </div>
+                    <div class="columns-container" data-project-id="${project.id}">
+                        <!-- 列将由JS动态添加 -->
+                    </div>
+                `;
+                projectsContainerEl.appendChild(projectEl);
+                const columnsContainerEl = projectEl.querySelector('.columns-container');
+                
+                // 按列序号升序排列（数字越小越靠前）
+                const sortedColumns = [...project.columns].sort((a, b) => a.order - b.order);
+                
+                // 渲染每个列
+                sortedColumns.forEach(column => {
+                    const columnEl = document.createElement('div');
+                    columnEl.className = 'column';
+                    columnEl.dataset.columnId = column.id;
+                    columnEl.dataset.projectId = project.id;
+                    columnEl.innerHTML = `
+                        <div class="column-header">
+                            <div class="column-title" data-project-id="${project.id}" data-column-id="${column.id}">${column.name}</div>
+                            <div class="column-controls">
+                                <button class="add-item-btn" data-project-id="${project.id}" data-column-id="${column.id}" title="添加事项">➕</button>
+                            </div>
+                        </div>
+                        <div class="items-container" data-column-id="${column.id}" data-project-id="${project.id}">
+                            ${column.items.map(item => `
+                                <div class="item" draggable="true" data-item-id="${item.id}" data-project-id="${project.id}" data-column-id="${column.id}">
+                                    <div class="item-title">${item.title}</div>
+                                    <div class="item-description">${item.description || ''}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    columnsContainerEl.appendChild(columnEl);
+                });
+            });
+            attachColumnAndItemEvents();
+        }
+
+        // 为列和事项绑定事件 (添加、删除、拖放)
+        function attachColumnAndItemEvents() {
+            // 添加列按钮
+            document.querySelectorAll('.add-column-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const projectId = e.target.dataset.projectId;
+                    openColumnModal(projectId);
+                });
+            });
+            // 编辑项目标题
+            document.querySelectorAll('.project-title').forEach(title => {
+                title.addEventListener('click', (e) => {
+                    const projectId = e.target.dataset.projectId;
+                    openProjectModal(projectId);
+                });
+            });
+            // 添加事项按钮
+            document.querySelectorAll('.add-item-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const projectId = e.target.dataset.projectId;
+                    const columnId = e.target.dataset.columnId;
+                    openItemModal(projectId, columnId);
+                });
+            });
+            // 编辑列标题
+            document.querySelectorAll('.column-title').forEach(title => {
+                title.addEventListener('click', (e) => {
+                    const projectId = e.target.dataset.projectId;
+                    const columnId = e.target.dataset.columnId;
+                    openColumnModal(projectId, columnId);
+                });
+            });
+            // 事项点击编辑（单击）
+            document.querySelectorAll('.item').forEach(item => {
+                item.addEventListener('click', (e) => {
+                    const projectId = e.currentTarget.dataset.projectId;
+                    const columnId = e.currentTarget.dataset.columnId;
+                    const itemId = e.currentTarget.dataset.itemId;
+                    openItemModal(projectId, columnId, itemId);
+                });
+            });
+            // 拖放事件
+            document.querySelectorAll('.item').forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleItemDragOver);
+                item.addEventListener('dragenter', handleItemDragEnter);
+                item.addEventListener('dragleave', handleItemDragLeave);
+                item.addEventListener('drop', handleItemDrop);
+            });
+            document.querySelectorAll('.items-container').forEach(container => {
+                container.addEventListener('dragover', handleDragOver);
+                container.addEventListener('drop', handleDrop);
+                container.addEventListener('dragenter', handleDragEnter);
+                container.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        // 项目相关功能
+        function addProject(order, name) {
+            const newProject = {
+                id: generateId('project'),
+                name: name,
+                order: parseInt(order),
+                columns: []
+            };
+            kanbanData.projects.push(newProject);
+            saveToLocalStorage();
+            renderKanban();
+        }
+
+        function editProject(projectId, newOrder, newName) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                project.name = newName;
+                project.order = parseInt(newOrder);
+                saveToLocalStorage();
+                renderKanban();
+            }
+        }
+
+        function deleteProject(projectId) {
+            kanbanData.projects = kanbanData.projects.filter(p => p.id !== projectId);
+            saveToLocalStorage();
+            renderKanban();
+        }
+
+        // 列相关功能
+        function addColumn(projectId, columnOrder, columnName) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                const newColumn = {
+                    id: generateId('column'),
+                    name: columnName,
+                    order: parseInt(columnOrder),
+                    items: []
+                };
+                project.columns.push(newColumn);
+                saveToLocalStorage();
+                renderKanban();
+            }
+        }
+
+        function editColumn(projectId, columnId, newOrder, newName) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                const column = project.columns.find(c => c.id === columnId);
+                if (column) {
+                    column.name = newName;
+                    column.order = parseInt(newOrder);
+                    saveToLocalStorage();
+                    renderKanban();
+                }
+            }
+        }
+
+        function deleteColumn(projectId, columnId) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                project.columns = project.columns.filter(c => c.id !== columnId);
+                saveToLocalStorage();
+                renderKanban();
+            }
+        }
+
+        // 事项相关功能
+        function addItem(projectId, columnId, title, description) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                const column = project.columns.find(c => c.id === columnId);
+                if (column) {
+                    const newItem = {
+                        id: generateId('item'),
+                        title: title,
+                        description: description
+                    };
+                    column.items.push(newItem);
+                    saveToLocalStorage();
+                    renderKanban();
+                }
+            }
+        }
+
+        function editItem(projectId, columnId, itemId, newTitle, newDescription) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                const column = project.columns.find(c => c.id === columnId);
+                if (column) {
+                    const item = column.items.find(i => i.id === itemId);
+                    if (item) {
+                        item.title = newTitle;
+                        item.description = newDescription;
+                        saveToLocalStorage();
+                        renderKanban();
+                    }
+                }
+            }
+        }
+
+        function deleteItem(projectId, columnId, itemId) {
+            const project = kanbanData.projects.find(p => p.id === projectId);
+            if (project) {
+                const column = project.columns.find(c => c.id === columnId);
+                if (column) {
+                    column.items = column.items.filter(i => i.id !== itemId);
+                    saveToLocalStorage();
+                    renderKanban();
+                }
+            }
+        }
+
+        // 移动事项（跨列或同列内）
+        function moveItem(itemId, fromProjectId, fromColumnId, toProjectId, toColumnId, targetIndex = null) {
+            if (fromProjectId === toProjectId && fromColumnId === toColumnId) {
+                // 同列内移动
+                const project = kanbanData.projects.find(p => p.id === fromProjectId);
+                if (!project) return;
+                const column = project.columns.find(c => c.id === fromColumnId);
+                if (!column) return;
+                const itemIndex = column.items.findIndex(i => i.id === itemId);
+                if (itemIndex === -1) return;
+                
+                // 从原位置移除
+                const [item] = column.items.splice(itemIndex, 1);
+                
+                // 插入到新位置
+                if (targetIndex === null) {
+                    // 如果没有指定目标位置，则添加到末尾
+                    column.items.push(item);
+                } else {
+                    // 否则插入到指定位置
+                    column.items.splice(targetIndex, 0, item);
+                }
+            } else {
+                // 跨列移动
+                const fromProject = kanbanData.projects.find(p => p.id === fromProjectId);
+                const toProject = kanbanData.projects.find(p => p.id === toProjectId);
+                if (!fromProject || !toProject) return;
+                const fromColumn = fromProject.columns.find(c => c.id === fromColumnId);
+                const toColumn = toProject.columns.find(c => c.id === toColumnId);
+                if (!fromColumn || !toColumn) return;
+                const itemIndex = fromColumn.items.findIndex(i => i.id === itemId);
+                if (itemIndex === -1) return;
+                
+                const [item] = fromColumn.items.splice(itemIndex, 1);
+                
+                if (targetIndex === null) {
+                    toColumn.items.push(item);
+                } else {
+                    toColumn.items.splice(targetIndex, 0, item);
+                }
+            }
+            saveToLocalStorage();
+            renderKanban();
+        }
+
+        // 拖放功能
+        function handleDragStart(e) {
+            currentDraggedItem = e.target;
+            currentDragSourceColumn = e.target.parentElement;
+            e.target.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', e.target.dataset.itemId);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const targetContainer = e.currentTarget;
+            if (targetContainer.classList.contains('items-container')) {
+                targetContainer.classList.remove('drop-zone');
+                const itemId = e.dataTransfer.getData('text/plain');
+                const toProjectId = targetContainer.dataset.projectId;
+                const toColumnId = targetContainer.dataset.columnId;
+                const fromProjectId = currentDraggedItem.dataset.projectId;
+                const fromColumnId = currentDraggedItem.dataset.columnId;
+                if (itemId) {
+                    // 计算放置位置
+                    const items = Array.from(targetContainer.querySelectorAll('.item:not(.dragging)'));
+                    let targetIndex = items.length;
+                    
+                    // 找到拖拽结束的位置
+                    const afterElement = getDragAfterElement(targetContainer, e.clientY);
+                    if (afterElement) {
+                        targetIndex = items.indexOf(afterElement);
+                    }
+                    
+                    moveItem(itemId, fromProjectId, fromColumnId, toProjectId, toColumnId, targetIndex);
+                }
+            }
+            if (currentDraggedItem) {
+                currentDraggedItem.classList.remove('dragging');
+                currentDraggedItem = null;
+            }
+        }
+
+        function handleDragEnter(e) {
+            e.preventDefault();
+            if (e.currentTarget.classList.contains('items-container')) {
+                e.currentTarget.classList.add('drop-zone');
+            }
+        }
+
+        function handleDragLeave(e) {
+            if (e.currentTarget.classList.contains('items-container')) {
+                e.currentTarget.classList.remove('drop-zone');
+            }
+        }
+
+        // 获取拖拽后的元素位置
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // 事项之间的拖放
+        function handleItemDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        }
+
+        function handleItemDragEnter(e) {
+            e.preventDefault();
+            if (dragOverItem !== e.currentTarget) {
+                if (dragOverItem) {
+                    dragOverItem.classList.remove('drag-over');
+                }
+                dragOverItem = e.currentTarget;
+                dragOverItem.classList.add('drag-over');
+            }
+        }
+
+        function handleItemDragLeave(e) {
+            if (dragOverItem === e.currentTarget) {
+                dragOverItem.classList.remove('drag-over');
+                dragOverItem = null;
+            }
+        }
+
+        function handleItemDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (dragOverItem) {
+                dragOverItem.classList.remove('drag-over');
+                dragOverItem = null;
+            }
+            
+            const itemId = e.dataTransfer.getData('text/plain');
+            const targetItem = e.currentTarget;
+            const toProjectId = targetItem.dataset.projectId;
+            const toColumnId = targetItem.dataset.columnId;
+            const fromProjectId = currentDraggedItem.dataset.projectId;
+            const fromColumnId = currentDraggedItem.dataset.columnId;
+            
+            if (itemId) {
+                // 计算放置位置
+                const container = targetItem.parentElement;
+                const items = Array.from(container.querySelectorAll('.item:not(.dragging)'));
+                const targetIndex = items.indexOf(targetItem);
+                
+                moveItem(itemId, fromProjectId, fromColumnId, toProjectId, toColumnId, targetIndex);
+            }
+            
+            if (currentDraggedItem) {
+                currentDraggedItem.classList.remove('dragging');
+                currentDraggedItem = null;
+            }
+        }
+
+        // 模态框控制
+        function openProjectModal(projectId = null) {
+            isEditingProject = projectId !== null;
+            document.getElementById('projectModalTitle').textContent = isEditingProject ? '编辑项目' : '添加新项目';
+            currentProjectIdInputEl.value = projectId || '';
+            if (isEditingProject) {
+                const project = kanbanData.projects.find(p => p.id === projectId);
+                projectOrderInputEl.value = project?.order || getNextProjectOrder();
+                projectNameInputEl.value = project?.name || '';
+                deleteProjectBtnEl.style.display = 'inline-block';
+            } else {
+                projectOrderInputEl.value = getNextProjectOrder();
+                projectNameInputEl.value = '';
+                deleteProjectBtnEl.style.display = 'none';
+            }
+            projectModalEl.classList.add('active');
+            projectNameInputEl.focus();
+        }
+
+        function closeProjectModal() {
+            projectModalEl.classList.remove('active');
+            projectFormEl.reset();
+            isEditingProject = false;
+            deleteProjectBtnEl.style.display = 'none';
+        }
+
+        function openColumnModal(projectId, columnId = null) {
+            isEditingColumn = columnId !== null;
+            document.getElementById('columnModalTitle').textContent = isEditingColumn ? '编辑列' : '添加新列';
+            currentColumnProjectIdInputEl.value = projectId;
+            currentColumnIdInputEl.value = columnId || '';
+            if (isEditingColumn) {
+                const project = kanbanData.projects.find(p => p.id === projectId);
+                const column = project?.columns.find(c => c.id === columnId);
+                columnOrderInputEl.value = column?.order || getNextColumnOrder(projectId);
+                columnNameInputEl.value = column?.name || '';
+                deleteColumnBtnEl.style.display = 'inline-block';
+            } else {
+                columnOrderInputEl.value = getNextColumnOrder(projectId);
+                columnNameInputEl.value = '';
+                deleteColumnBtnEl.style.display = 'none';
+            }
+            columnModalEl.classList.add('active');
+            columnNameInputEl.focus();
+        }
+
+        function closeColumnModal() {
+            columnModalEl.classList.remove('active');
+            columnFormEl.reset();
+            isEditingColumn = false;
+            deleteColumnBtnEl.style.display = 'none';
+        }
+
+        function openItemModal(projectId, columnId, itemId = null) {
+            isEditingItem = itemId !== null;
+            document.getElementById('itemModalTitle').textContent = isEditingItem ? '编辑事项' : '添加新事项';
+            currentItemProjectIdInputEl.value = projectId;
+            currentItemColumnIdInputEl.value = columnId;
+            currentItemIdInputEl.value = itemId || '';
+            if (isEditingItem) {
+                const project = kanbanData.projects.find(p => p.id === projectId);
+                const column = project?.columns.find(c => c.id === columnId);
+                const item = column?.items.find(i => i.id === itemId);
+                itemTitleInputEl.value = item?.title || '';
+                itemDescriptionInputEl.value = item?.description || '';
+                deleteItemBtnEl.style.display = 'inline-block';
+            } else {
+                itemTitleInputEl.value = '';
+                itemDescriptionInputEl.value = '';
+                deleteItemBtnEl.style.display = 'none';
+            }
+            itemModalEl.classList.add('active');
+            itemTitleInputEl.focus();
+        }
+
+        function closeItemModal() {
+            itemModalEl.classList.remove('active');
+            itemFormEl.reset();
+            isEditingItem = false;
+            deleteItemBtnEl.style.display = 'none';
+        }
+
+        // 导出JSON
+        function exportToJson() {
+            const dataStr = JSON.stringify(kanbanData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kanban_data_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入JSON
+        function importFromJson(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.projects && Array.isArray(importedData.projects)) {
+                        if (confirm('导入将覆盖当前所有看板数据。是否继续？')) {
+                            kanbanData = importedData;
+                            saveToLocalStorage();
+                            renderKanban();
+                            alert('数据导入成功！');
+                        }
+                    } else {
+                        alert('导入的JSON文件格式不正确。');
+                    }
+                } catch (error) {
+                    alert('解析JSON文件时出错。请确保文件格式正确。');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 事件监听
+        addProjectBtnEl.addEventListener('click', () => openProjectModal());
+        cancelProjectBtnEl.addEventListener('click', closeProjectModal);
+        projectFormEl.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const order = projectOrderInputEl.value.trim();
+            const name = projectNameInputEl.value.trim();
+            const projectId = currentProjectIdInputEl.value;
+            if (name && order) {
+                if (isEditingProject) {
+                    editProject(projectId, order, name);
+                } else {
+                    addProject(order, name);
+                }
+                closeProjectModal();
+            }
+        });
+
+        deleteProjectBtnEl.addEventListener('click', () => {
+            const projectId = currentProjectIdInputEl.value;
+            if (projectId && confirm('确定要删除这个项目吗？项目中的所有列和事项也将被删除。')) {
+                deleteProject(projectId);
+                closeProjectModal();
+            }
+        });
+
+        cancelColumnBtnEl.addEventListener('click', closeColumnModal);
+        columnFormEl.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const order = columnOrderInputEl.value.trim();
+            const name = columnNameInputEl.value.trim();
+            const projectId = currentColumnProjectIdInputEl.value;
+            const columnId = currentColumnIdInputEl.value;
+            if (name && projectId && order) {
+                if (isEditingColumn) {
+                    editColumn(projectId, columnId, order, name);
+                } else {
+                    addColumn(projectId, order, name);
+                }
+                closeColumnModal();
+            }
+        });
+
+        deleteColumnBtnEl.addEventListener('click', () => {
+            const projectId = currentColumnProjectIdInputEl.value;
+            const columnId = currentColumnIdInputEl.value;
+            if (projectId && columnId && confirm('确定要删除这个列吗？列中的所有事项也将被删除。')) {
+                deleteColumn(projectId, columnId);
+                closeColumnModal();
+            }
+        });
+
+        cancelItemBtnEl.addEventListener('click', closeItemModal);
+        itemFormEl.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const title = itemTitleInputEl.value.trim();
+            const description = itemDescriptionInputEl.value.trim();
+            const projectId = currentItemProjectIdInputEl.value;
+            const columnId = currentItemColumnIdInputEl.value;
+            const itemId = currentItemIdInputEl.value;
+            if (title && projectId && columnId) {
+                if (isEditingItem) {
+                    editItem(projectId, columnId, itemId, title, description);
+                } else {
+                    addItem(projectId, columnId, title, description);
+                }
+                closeItemModal();
+            }
+        });
+
+        deleteItemBtnEl.addEventListener('click', () => {
+            const projectId = currentItemProjectIdInputEl.value;
+            const columnId = currentItemColumnIdInputEl.value;
+            const itemId = currentItemIdInputEl.value;
+            if (projectId && columnId && itemId && confirm('确定要删除这个事项吗？')) {
+                deleteItem(projectId, columnId, itemId);
+                closeItemModal();
+            }
+        });
+
+        exportBtnEl.addEventListener('click', exportToJson);
+        importFileEl.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                importFromJson(file);
+                e.target.value = ''; // 清除选择，允许重复导入同一文件
+            }
+        });
+        clearDataBtnEl.addEventListener('click', () => {
+            if (confirm('确定要清除所有看板数据吗？此操作不可撤销。')) {
+                localStorage.removeItem('kanbanData');
+                kanbanData = { projects: [] };
+                renderKanban();
+                alert('所有数据已清除。');
+            }
+        });
+
+        // 模态框外部点击关闭
+        window.addEventListener('click', (e) => {
+            if (e.target === projectModalEl) closeProjectModal();
+            if (e.target === columnModalEl) closeColumnModal();
+            if (e.target === itemModalEl) closeItemModal();
+        });
+
+        // 初始化应用
+        function init() {
+            loadFromLocalStorage();
+            renderKanban();
+        }
+
+        // 启动
+        init();
+    </script>
+</body>
+</html>

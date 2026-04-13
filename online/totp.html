@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0" />
+        <meta
+            http-equiv="X-UA-Compatible"
+            content="IE=edge" />
+        <meta
+            name="robots"
+            content="noindex, nofollow" />
+        <meta
+            name="referrer"
+            content="no-referrer" />
+        <meta
+            name="format-detection"
+            content="telephone=no" />
+        <meta
+            name="apple-mobile-web-app-capable"
+            content="yes" />
+        <meta
+            name="apple-mobile-web-app-status-bar-style"
+            content="black-translucent" />
+        <meta
+            name="apple-mobile-web-app-title"
+            content="TOTP验证码" />
+
+        <link
+            rel="icon"
+            type="image/x-icon"
+            href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzAwNmVmZiIvPgo8dGV4dCB4PSIxNiIgeT0iMjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UPC90ZXh0Pgo8L3N2Zz4K" />
+        <link
+            rel="apple-touch-icon"
+            href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iMjAiIGZpbGw9IiMwMDZlZmYiLz4KPHR4dCB4PSI5MCIgeT0iMTEwIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+VDwvdGV4dD4KPC9zdmc+Cg==" />
+
+        <title>TOTP/2FA验证码生成器 - 双因素认证工具</title>
+
+        <link
+            rel="preload"
+            href="https://unpkg.com/vue@2/dist/vue.js"
+            as="script" />
+        <link
+            rel="preload"
+            href="https://unpkg.com/element-ui/lib/theme-chalk/index.css"
+            as="style" />
+        <link
+            rel="preload"
+            href="https://unpkg.com/element-ui/lib/index.js"
+            as="script" />
+        <link
+            rel="preload"
+            href="https://unpkg.com/otpauth@9.1.4/dist/otpauth.umd.min.js"
+            as="script" />
+
+        <link
+            rel="stylesheet"
+            href="https://unpkg.com/element-ui/lib/theme-chalk/index.css" />
+
+        <script src="https://unpkg.com/vue@2/dist/vue.js"></script>
+        <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+        <script src="https://unpkg.com/otpauth@9.1.4/dist/otpauth.umd.min.js"></script>
+
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                padding: 20px;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+                    "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+                background-color: #f5f5f5;
+                min-height: 100vh;
+            }
+
+            .totp {
+                width: 520px;
+                max-width: 100%;
+                margin: 0 auto;
+                margin-top: 30px;
+            }
+
+            .totp .code {
+                text-align: center;
+                padding: 20px 0;
+            }
+
+            .totp .code span {
+                display: inline-block;
+                font-size: 26px;
+                font-weight: bold;
+                border: 1px solid #000;
+                padding: 5px 10px;
+                border-radius: 4px;
+                background-color: #fff;
+                letter-spacing: 2px;
+            }
+
+            .totp .seconds {
+                text-align: center;
+                font-size: 12px;
+                color: #666;
+            }
+
+            .totp .seconds b {
+                font-size: 20px;
+                color: #006eff;
+            }
+
+            .totp .card {
+                position: relative;
+            }
+
+            .totp .press {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                height: 5px;
+                z-index: 10;
+            }
+
+            .totp .press span {
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                background: #006eff;
+                display: inline-block;
+                height: 5px;
+                width: 50%;
+                transition: all 0.3s;
+                border-radius: 0 0 4px 4px;
+            }
+
+            .setting {
+                margin-top: 30px;
+            }
+
+            .setting .row {
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+            }
+
+            .setting .row .label {
+                width: 80px;
+                text-align: right;
+                font-weight: 500;
+            }
+
+            .setting .row .val {
+                flex: 1;
+            }
+
+            .setting .tips {
+                font-size: 12px;
+                text-align: right;
+                color: #999;
+                margin-top: 10px;
+            }
+
+            .url-tip {
+                margin-top: 20px;
+            }
+
+            .url-tip .tip-content {
+                background: #f0f9ff;
+                border: 1px solid #bfdbfe;
+                border-radius: 6px;
+                padding: 12px;
+                font-size: 13px;
+                color: #1e40af;
+            }
+
+            .url-tip .tip-title {
+                font-weight: 600;
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+            }
+
+            .url-tip .tip-title::before {
+                content: "💡";
+                margin-right: 6px;
+            }
+
+            .url-example {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 4px;
+                padding: 8px;
+                margin-top: 8px;
+                font-size: 12px;
+                color: #475569;
+                word-break: break-all;
+            }
+
+            .copy-btn {
+                margin-left: 8px;
+                font-size: 12px;
+                padding: 2px 8px;
+            }
+
+            .page-header {
+                text-align: center;
+                padding: 20px 0;
+            }
+
+            .page-title {
+                font-size: 28px;
+                font-weight: 600;
+                color: #1f2937;
+                margin: 0 0 8px 0;
+                letter-spacing: -0.5px;
+            }
+
+            .page-subtitle {
+                font-size: 14px;
+                color: #6b7280;
+                margin: 0;
+                font-weight: 400;
+            }
+
+            .site-footer {
+                padding: 1.2rem 2rem;
+                color: #000;
+            }
+
+            footer {
+                position: absolute;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                padding: 20px;
+            }
+            footer a {
+                pointer-events: auto;
+                color: #000;
+            }
+            footer span {
+                font-size: 12px;
+            }
+
+            .footer-content {
+                display: flex;
+                gap: 0.8rem;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.9rem;
+            }
+
+            .github-link {
+                display: inline-flex;
+                align-items: center;
+                gap: 0.4rem;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            }
+
+            .github-link:hover {
+                transform: translateY(-1px);
+            }
+
+            .github-icon {
+                flex-shrink: 0;
+            }
+
+            .divider {
+                user-select: none;
+            }
+
+            @media (max-width: 600px) {
+                .totp {
+                    width: 100%;
+                    margin-top: 20px;
+                }
+
+                .totp .code span {
+                    font-size: 22px;
+                    padding: 8px 12px;
+                }
+
+                .setting .row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+
+                .setting .row .label {
+                    width: 100%;
+                    text-align: left;
+                    padding-right: 0;
+                    margin-bottom: 5px;
+                }
+                footer {
+                    position: relative;
+                }
+                .page-title {
+                    font-size: 24px;
+                }
+
+                .page-subtitle {
+                    font-size: 13px;
+                    padding: 0 20px;
+                }
+
+                .footer-content {
+                    flex-wrap: wrap;
+                    gap: 0.8rem;
+                    justify-content: center;
+                }
+
+                .divider {
+                    display: none;
+                }
+
+                .github-text {
+                    display: none;
+                }
+
+                .github-icon {
+                    width: 20px;
+                    height: 20px;
+                }
+            }
+
+            .loading {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 200px;
+            }
+
+            .error-message {
+                color: #f56c6c;
+                font-size: 12px;
+                margin-top: 5px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="app">
+            <div class="page-header">
+                <h1 class="page-title">TOTP验证码生成器</h1>
+                <p class="page-subtitle">支持Google Authenticator、Microsoft Authenticator等双因素认证应用</p>
+            </div>
+            <div class="totp">
+                <div class="card">
+                    <div class="press">
+                        <span :style="getPress"></span>
+                    </div>
+                    <el-card>
+                        <el-input
+                            v-model.trim="secret"
+                            placeholder="请输入Base32格式的密钥"
+                            :class="{ 'is-error': secretError }">
+                            <el-button
+                                slot="append"
+                                @click="initTotp"
+                                type="primary"
+                                >获取</el-button
+                            >
+                        </el-input>
+                        <div
+                            v-if="secretError"
+                            class="error-message">
+                            {{ secretError }}
+                        </div>
+
+                        <div
+                            class="code"
+                            v-if="code">
+                            <span>{{ code }}</span>
+                        </div>
+                        <div
+                            class="seconds"
+                            v-if="code">
+                            <span>剩余 <b>{{ seconds }}</b> 秒</span>
+                        </div>
+                    </el-card>
+                </div>
+
+                <div class="setting">
+                    <el-card>
+                        <div class="row">
+                            <div class="label">时效(秒)：</div>
+                            <div class="val">
+                                <el-input
+                                    v-model.trim="period"
+                                    type="number"
+                                    :min="1"
+                                    :max="300"
+                                    placeholder="30"></el-input>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="label">长度：</div>
+                            <div class="val">
+                                <el-input
+                                    v-model.trim="digits"
+                                    type="number"
+                                    :min="4"
+                                    :max="10"
+                                    placeholder="6"></el-input>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="label">算法：</div>
+                            <div class="val">
+                                <el-select
+                                    style="width: 100%"
+                                    v-model="algorithm"
+                                    placeholder="选择算法">
+                                    <el-option
+                                        label="SHA1"
+                                        value="SHA1"></el-option>
+                                    <el-option
+                                        label="SHA256"
+                                        value="SHA256"></el-option>
+                                    <el-option
+                                        label="SHA512"
+                                        value="SHA512"></el-option>
+                                </el-select>
+                            </div>
+                        </div>
+
+                        <div class="tips">💡 提示：每次修改参数后，需要重新点击"获取"按钮</div>
+                    </el-card>
+                </div>
+
+                <!-- URL参数使用提示 -->
+                <div class="url-tip">
+                    <el-card>
+                        <div class="tip-content">
+                            <div class="tip-title">快速使用方式</div>
+                            <div>您可以通过URL参数直接传入密钥，无需手动输入：</div>
+                            <div class="url-example">
+                                {{ currentUrl }}?code=YOUR_SECRET_KEY
+                                <el-button
+                                    class="copy-btn"
+                                    size="mini"
+                                    type="text"
+                                    @click="copyUrlExample">
+                                    复制
+                                </el-button>
+                            </div>
+                            <div style="margin-top: 8px; font-size: 12px; color: #64748b">
+                                将 YOUR_SECRET_KEY 替换为您的实际密钥即可
+                            </div>
+                        </div>
+                    </el-card>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            new Vue({
+                el: "#app",
+                data() {
+                    return {
+                        totp: null,
+                        secret: "JBSWY3DPEHPK3PXP",
+                        period: 30,
+                        code: "",
+                        seconds: "",
+                        timerData: null,
+                        digits: 6,
+                        algorithm: "SHA1",
+                        showSetting: false,
+                        secretError: "",
+                        currentUrl: window.location.origin + window.location.pathname,
+                    };
+                },
+                created() {
+                    // 获取URL参数
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const secret = urlParams.get("code");
+                    if (secret) {
+                        this.secret = secret;
+                        // 如果通过URL参数传入了密钥，显示提示
+                        this.$nextTick(() => {
+                            this.$message.success("已从URL参数中获取密钥");
+                        });
+                    }
+                    this.initTotp();
+                },
+                computed: {
+                    getPress() {
+                        let press = (this.seconds / this.period) * 100;
+                        return "width:" + (press > 100 ? 100 : press) + "%";
+                    },
+                },
+                methods: {
+                    initTotp() {
+                        this.secretError = "";
+
+                        if (!this.secret) {
+                            this.secretError = "请输入密钥";
+                            return;
+                        }
+
+                        try {
+                            let totp = new OTPAuth.TOTP({
+                                issuer: "TOTP Generator",
+                                label: "User",
+                                algorithm: this.algorithm,
+                                digits: parseInt(this.digits) || 6,
+                                period: parseInt(this.period) || 30,
+                                secret: this.secret,
+                            });
+
+                            this.totp = totp;
+                            this.code = totp.generate();
+                            this.seconds = totp.period - (Math.floor(Date.now() / 1000) % totp.period);
+                            this.timer();
+                        } catch (error) {
+                            this.secretError = "密钥格式错误，请检查Base32格式";
+                            this.code = "";
+                            this.seconds = "";
+                            console.error("TOTP生成错误:", error);
+                        }
+                    },
+                    timer() {
+                        clearInterval(this.timerData);
+                        this.timerData = setInterval(() => {
+                            if (this.seconds <= 1) {
+                                this.initTotp();
+                                return;
+                            }
+                            this.seconds -= 1;
+                        }, 1000);
+                    },
+                    copyUrlExample() {
+                        const exampleUrl = `${this.currentUrl}?code=YOUR_SECRET_KEY`;
+
+                        // 尝试使用现代的 Clipboard API
+                        if (navigator.clipboard && window.isSecureContext) {
+                            navigator.clipboard
+                                .writeText(exampleUrl)
+                                .then(() => {
+                                    this.$message.success("URL示例已复制到剪贴板");
+                                })
+                                .catch(() => {
+                                    this.fallbackCopy(exampleUrl);
+                                });
+                        } else {
+                            this.fallbackCopy(exampleUrl);
+                        }
+                    },
+                    fallbackCopy(text) {
+                        // 降级方案：使用传统的复制方法
+                        const textArea = document.createElement("textarea");
+                        textArea.value = text;
+                        textArea.style.position = "fixed";
+                        textArea.style.left = "-999999px";
+                        textArea.style.top = "-999999px";
+                        document.body.appendChild(textArea);
+                        textArea.focus();
+                        textArea.select();
+
+                        try {
+                            document.execCommand("copy");
+                            this.$message.success("URL示例已复制到剪贴板");
+                        } catch (err) {
+                            this.$message.warning("复制失败，请手动复制");
+                        }
+
+                        document.body.removeChild(textArea);
+                    },
+                },
+                beforeDestroy() {
+                    if (this.timerData) {
+                        clearInterval(this.timerData);
+                    }
+                },
+            });
+        </script>
+    </body>
+</html>
